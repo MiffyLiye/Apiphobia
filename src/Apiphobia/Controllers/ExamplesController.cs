@@ -1,41 +1,47 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Net.Http;
+using Apiphobia.Filters;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Apiphobia.Controllers
 {
     [Route("api/[controller]")]
-    public class ValuesController : Controller
+    [ExamplesFilter]
+    public class ExamplesController : Controller
     {
-        // GET api/values
+        // GET api/examples
         [HttpGet]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };
         }
 
-        // GET api/values/5
+        // GET api/examples/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public string Get(string id)
         {
-            return "value";
+            if (!id.All(char.IsDigit))
+            {
+                throw new HttpRequestException("ID must be a number.");
+            }
+
+            return $"value{id}";
         }
 
-        // POST api/values
+        // POST api/examples
         [HttpPost]
         public void Post([FromBody]string value)
         {
         }
 
-        // PUT api/values/5
+        // PUT api/examples/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody]string value)
         {
         }
 
-        // DELETE api/values/5
+        // DELETE api/examples/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
