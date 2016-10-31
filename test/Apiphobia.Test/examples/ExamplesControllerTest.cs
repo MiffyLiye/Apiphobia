@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Http;
 using Apiphobia.Controllers;
+using Apiphobia.Models;
 using Xunit;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Apiphobia.Test.examples
 {
@@ -13,7 +14,8 @@ namespace Apiphobia.Test.examples
 
         public ExamplesControllerTest()
         {
-            _controller = new ExamplesController();
+            var examplesRepository = new ExamplesRepository();
+            _controller = new ExamplesController(examplesRepository);
         }
 
         public void Dispose()
@@ -22,21 +24,25 @@ namespace Apiphobia.Test.examples
         }
 
         [Fact]
-        public void should_get_default_values()
+        public void should_get_all_values()
         {
+            _controller.Post(new Example{Value = "value1"});
+            _controller.Post(new Example{Value = "value2"});
+
             var result = _controller.Get().ToList();
 
             result.Should().NotBeNull();
             result.Count().Should().Be(2);
-            result.ElementAt(0).Should().Be("value1");
-            result.ElementAt(1).Should().Be("value2");
+            result.Should().Contain(e => e.Value == "value1");
+            result.Should().Contain(e => e.Value == "value2");
         }
 
         [Fact]
-        public void should_throw_when_get_with_invalid_parameter()
+        public void should_get_not_found_when_get_with_invalid_parameter()
         {
-            _controller.Invoking(c => c.Get("invalid"))
-                .ShouldThrow<HttpRequestException>();
+            var result = _controller.Get("invalid");
+
+            result.Should().BeOfType<NotFoundResult>();
         }
     }
 }

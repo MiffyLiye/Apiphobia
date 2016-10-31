@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using Apiphobia.Filters;
+using Apiphobia.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Apiphobia.Controllers
@@ -10,29 +9,42 @@ namespace Apiphobia.Controllers
     [ExamplesFilter]
     public class ExamplesController : Controller
     {
+        private readonly ExamplesRepository _examplesRepository;
+
+        public ExamplesController(ExamplesRepository examplesRepository)
+        {
+            _examplesRepository = examplesRepository;
+        }
+
         // GET api/examples
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<Example> Get()
         {
-            return new string[] { "value1", "value2" };
+            return _examplesRepository.FindAll();
         }
 
         // GET api/examples/5
-        [HttpGet("{id}")]
-        public string Get(string id)
+        [HttpGet("{id}", Name = "GetExample")]
+        public ActionResult Get(string id)
         {
-            if (!id.All(char.IsDigit))
+            var example = _examplesRepository.FindOrDefault(id);
+            if (example == default(Example))
             {
-                throw new HttpRequestException("ID must be a number.");
+                return NotFound();
             }
-
-            return $"value{id}";
+            return new ObjectResult(example);
         }
 
         // POST api/examples
         [HttpPost]
-        public void Post([FromBody]string value)
+        public ActionResult Post([FromBody]Example example)
         {
+            if (example == null)
+            {
+                return BadRequest();
+            }
+            _examplesRepository.Add(example);
+            return CreatedAtRoute("GetExample", new {id = example.Id}, example);
         }
 
         // PUT api/examples/5
@@ -43,8 +55,9 @@ namespace Apiphobia.Controllers
 
         // DELETE api/examples/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public void Delete(string id)
         {
+            _examplesRepository.Remove(id);
         }
     }
 }
